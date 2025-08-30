@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir:*)",
+      "Read(C:\\Users\\Lenovo\\Downloads/**)",
+      "WebSearch"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

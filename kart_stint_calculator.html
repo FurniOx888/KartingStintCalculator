@@ -1,0 +1,1280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kart Stint Calculator - 7 Hour Race Manager</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f3f4f6;
+            min-height: 100vh;
+            padding: 8px;
+            -webkit-text-size-adjust: 100%; /* iOS: keep consistent text sizing */
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        h1 {
+            color: #2563eb;
+            font-size: 24px;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        h2 {
+            font-size: 18px;
+            margin-bottom: 12px;
+            color: #1f2937;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+        }
+
+        label {
+            font-size: 12px;
+            font-weight: 500;
+            margin-bottom: 4px;
+            color: #4b5563;
+        }
+
+        input[type="number"], input[type="text"], select {
+            padding: 6px 8px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 100%;
+        }
+
+        input[type="number"]:focus, input[type="text"]:focus, select:focus {
+            outline: none;
+            border-color: #2563eb;
+            box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+        }
+
+        input:disabled, select:disabled {
+            background-color: #f3f4f6;
+            cursor: not-allowed;
+        }
+
+        .time-input {
+            font-family: monospace;
+        }
+
+        .driver-config {
+            margin-bottom: 16px;
+            padding: 12px;
+            background: #f9fafb;
+            border-radius: 6px;
+        }
+
+        .driver-inputs {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 12px;
+        }
+
+        .driver-input-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .driver-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .driver-card {
+            background: #f9fafb;
+            border-radius: 6px;
+            padding: 8px;
+        }
+
+        .driver-header {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            margin-bottom: 4px;
+        }
+
+        .driver-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .driver-dot.blue { background-color: #3b82f6; }
+        .driver-dot.green { background-color: #10b981; }
+        .driver-dot.red { background-color: #ef4444; }
+
+        .driver-name {
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .driver-time {
+            font-size: 13px;
+            font-weight: bold;
+            margin-bottom: 1px;
+            font-family: monospace;
+        }
+
+        .driver-time-label {
+            font-size: 10px;
+            color: #6b7280;
+            margin-right: 4px;
+        }
+
+        .driver-time-predicted {
+            font-size: 12px;
+            color: #6b7280;
+            font-family: monospace;
+            margin-bottom: 2px;
+        }
+
+        .driver-status {
+            font-size: 11px;
+        }
+
+        .driver-status.ok { color: #10b981; }
+        .driver-status.warning { color: #ef4444; }
+
+        .stint-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .stint-card {
+            border: 1px solid #e5e7eb;
+            border-radius: 6px;
+            padding: 12px;
+            background: white;
+            transition: background-color 0.2s;
+        }
+
+        .stint-card.completed {
+            background-color: #f9fafb;
+        }
+
+        .stint-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .stint-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stint-number {
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .stint-time {
+            font-size: 11px;
+            color: #6b7280;
+            font-family: monospace;
+        }
+
+        .stint-clock-times {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            font-family: monospace;
+            margin-bottom: 8px;
+            padding: 4px 8px;
+            background: #f3f4f6;
+            border-radius: 4px;
+        }
+
+        .clock-time {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .clock-label {
+            font-size: 10px;
+            color: #6b7280;
+            margin-bottom: 2px;
+        }
+
+        .clock-value {
+            font-weight: bold;
+            color: #1f2937;
+        }
+
+        .clock-value.warning {
+            color: #dc2626;
+        }
+
+        .stint-controls {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .time-input-group {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+
+        .time-input-group input {
+            flex: 1;
+            text-align: center;
+        }
+
+        .time-btn {
+            padding: 2px 6px;
+            background: #e5e7eb;
+            border: 1px solid #d1d5db;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 12px;
+            line-height: 1;
+            transition: background 0.2s;
+        }
+
+        .time-btn:hover:not(:disabled) {
+            background: #d1d5db;
+        }
+
+        .time-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .stint-control {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stint-control span {
+            font-size: 14px;
+            font-family: monospace;
+        }
+
+        .driver-select {
+            padding: 6px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 14px;
+            width: 100%;
+        }
+
+        .stint-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .warning-badges {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: 4px;
+        }
+
+        .badge.warning {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+
+        .btn {
+            padding: 6px 12px;
+            border-radius: 4px;
+            border: none;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-green {
+            background-color: #10b981;
+            color: white;
+        }
+
+        .btn-green:hover {
+            background-color: #059669;
+        }
+
+        .btn-blue {
+            background-color: #3b82f6;
+            color: white;
+        }
+
+        .btn-blue:hover {
+            background-color: #2563eb;
+        }
+
+        .btn-red {
+            background-color: #ef4444;
+            color: white;
+        }
+
+        .btn-red:hover {
+            background-color: #dc2626;
+        }
+
+        .completed-text {
+            color: #10b981;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        @media (min-width: 640px) {
+            .summary-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        .summary-card {
+            border-radius: 6px;
+            padding: 8px;
+            text-align: center;
+        }
+
+        .summary-card.blue { background-color: #dbeafe; }
+        .summary-card.green { background-color: #d1fae5; }
+        .summary-card.orange { background-color: #fed7aa; }
+        .summary-card.red { background-color: #fee2e2; }
+
+        .summary-value {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 2px;
+            font-family: monospace;
+        }
+
+        .summary-value.blue { color: #2563eb; }
+        .summary-value.green { color: #10b981; }
+        .summary-value.orange { color: #ea580c; }
+        .summary-value.red { color: #dc2626; }
+
+        .summary-label {
+            font-size: 11px;
+            color: #4b5563;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+        }
+
+        .regulations-info {
+            background: #fef3c7;
+            border: 1px solid #f59e0b;
+            border-radius: 6px;
+            padding: 10px;
+            margin-bottom: 16px;
+            font-size: 12px;
+            color: #78350f;
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 4px;
+            }
+            
+            h1 {
+                font-size: 20px;
+            }
+            
+            .settings-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .driver-inputs {
+                grid-template-columns: 1fr;
+            }
+
+            /* Prevent iOS zoom on input focus by ensuring >=16px */
+            input[type="number"], input[type="text"], select {
+                font-size: 16px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="errorBanner" style="display:none;position:fixed;top:0;left:0;right:0;z-index:9999;background:#fee2e2;color:#7f1d1d;padding:8px 12px;font-size:12px;border-bottom:1px solid #fecaca;">
+        <strong>Script error:</strong> <span id="errorBannerText"></span>
+    </div>
+    <div class="container">
+        <div class="card">
+            <h1>
+                <span>🏎️</span>
+                <span>7-Hour Kart Race Manager</span>
+            </h1>
+
+            <!-- Team Configuration -->
+            <div class="form-group" style="margin-bottom: 16px;">
+                <label for="teamName">Team Name/Number (Required for multi-team use)</label>
+                <input type="text" id="teamName" placeholder="Team 1" value="" onchange="updateTeamName()" style="max-width: 300px;">
+                <small style="display: block; color: #6b7280; font-size: 11px; margin-top: 4px;">
+                    ⚠️ Enter unique team name to prevent data conflicts when using multiple tabs
+                </small>
+            </div>
+
+            <div class="regulations-info">
+                <strong>Race Regulations:</strong>
+                Min 13 pitstops (14 stints) • Stint: 10-38 min • Pit time: min 2 min • 
+                Min driving: 100min per driver (3 drivers per team)
+            </div>
+            
+            <!-- Driver Configuration -->
+            <div class="driver-config">
+                <h2>Team Drivers (3 Required)</h2>
+                <div class="driver-inputs" id="driverInputs">
+                    <div class="driver-input-group">
+                        <div class="driver-dot blue"></div>
+                        <input type="text" id="driver1Name" placeholder="Driver 1 Name" value="Driver 1" onchange="updateDriverName(1, this.value)">
+                    </div>
+                    <div class="driver-input-group">
+                        <div class="driver-dot green"></div>
+                        <input type="text" id="driver2Name" placeholder="Driver 2 Name" value="Driver 2" onchange="updateDriverName(2, this.value)">
+                    </div>
+                    <div class="driver-input-group">
+                        <div class="driver-dot red"></div>
+                        <input type="text" id="driver3Name" placeholder="Driver 3 Name" value="Driver 3" onchange="updateDriverName(3, this.value)">
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lap Time Settings -->
+            <h2>Lap Time Configuration</h2>
+            <div class="settings-grid">
+                <div class="form-group">
+                    <label for="avgLapTime">Avg Lap Time (mm:ss.ms)</label>
+                    <input type="text" id="avgLapTime" class="time-input" value="01:24.00" placeholder="01:24.00" onchange="updateSettings()">
+                </div>
+                <div class="form-group">
+                    <label for="outlapTime">Outlap Time (mm:ss.ms)</label>
+                    <input type="text" id="outlapTime" class="time-input" value="01:40.00" placeholder="01:40.00" onchange="updateSettings()">
+                </div>
+                <div class="form-group">
+                    <label for="inlapTime">Inlap Time (mm:ss.ms)</label>
+                    <input type="text" id="inlapTime" class="time-input" value="01:35.00" placeholder="01:35.00" onchange="updateSettings()">
+                </div>
+            </div>
+
+            <!-- Race Settings -->
+            <h2>Race Settings</h2>
+            <div class="settings-grid">
+                <div class="form-group">
+                    <label for="minStint">Min Stint (min)</label>
+                    <input type="number" id="minStint" value="10" min="10" max="38">
+                </div>
+                <div class="form-group">
+                    <label for="maxStint">Max Stint (min)</label>
+                    <input type="number" id="maxStint" value="38" min="10" max="38">
+                </div>
+                <div class="form-group">
+                    <label for="pitTime">Pit Time (mm:ss)</label>
+                    <input type="text" id="pitTime" class="time-input" value="02:00" placeholder="02:00" onchange="updateSettings()">
+                </div>
+            </div>
+
+            <!-- Driver Summary -->
+            <h2>Driver Summary</h2>
+            <div class="driver-summary" id="driverSummary">
+                <!-- Will be populated by JavaScript -->
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="btn btn-red" onclick="resetRace()">Reset All Data</button>
+                <button class="btn btn-green" onclick="saveToStorage()">Save Progress</button>
+                <button class="btn btn-blue" onclick="exportData()">Export Data</button>
+            </div>
+        </div>
+
+        <!-- Stints List -->
+        <div class="card">
+            <h2>Stints Management</h2>
+            <div class="stint-list" id="stintList">
+                <!-- Will be populated by JavaScript -->
+            </div>
+            
+            <!-- Summary -->
+            <div class="summary-grid" id="raceSummary">
+                <!-- Will be populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data Model
+        // iOS Safari can throw on localStorage/sessionStorage (especially in Private mode).
+        // Provide safe wrappers with in-memory fallback to avoid breaking rendering.
+        const __memoryStorage = {};
+        function safeGetItem(key, preferLocal) {
+            try {
+                if (preferLocal) return window.localStorage.getItem(key);
+                return window.sessionStorage.getItem(key);
+            } catch (_) {
+                return __memoryStorage[key] ?? null;
+            }
+        }
+        function safeSetItem(key, value, preferLocal) {
+            try {
+                if (preferLocal) window.localStorage.setItem(key, value);
+                else window.sessionStorage.setItem(key, value);
+            } catch (_) {
+                __memoryStorage[key] = value;
+            }
+        }
+        function safeRemoveItem(key) {
+            try { window.localStorage.removeItem(key); } catch (_) {}
+            try { window.sessionStorage.removeItem(key); } catch (_) {}
+            delete __memoryStorage[key];
+        }
+
+        let drivers = [
+            { id: 1, name: 'Driver 1', color: 'blue' },
+            { id: 2, name: 'Driver 2', color: 'green' },
+            { id: 3, name: 'Driver 3', color: 'red' }
+        ];
+
+        let raceSettings = {
+            avgLapTime: 84, // seconds (1:24)
+            outlapTime: 100, // seconds (1:40)
+            inlapTime: 95, // seconds (1:35)
+            minStint: 10,
+            maxStint: 38,
+            pitTime: 120, // seconds (2:00)
+            raceDuration: 420 // 7 hours in minutes
+        };
+
+        let stints = [];
+        let teamIdentifier = '';
+
+        // Generate unique tab ID (legacy use); keep for migration only
+        const tabId = Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
+        // Get storage key for current team (stable key for session mode)
+        function getStorageKey() {
+            return teamIdentifier ? `kartRaceData_${teamIdentifier}` : `kartRaceData_session`;
+        }
+
+        // Update team name
+        function updateTeamName() {
+            const teamNameInput = document.getElementById('teamName').value.trim();
+            if (teamNameInput) {
+                // If team name is provided, use it for persistent storage
+                teamIdentifier = teamNameInput.replace(/[^a-zA-Z0-9]/g, '_');
+                saveToStorage();
+                // Update page title
+                document.title = `Kart Calculator - ${teamNameInput}`;
+            } else {
+                // Use tab-specific storage
+                teamIdentifier = '';
+            }
+        }
+
+        // Time conversion functions
+        function parseTimeToSeconds(timeStr) {
+            // Accepts formats: "mm:ss.ms" or "mm:ss"
+            if (!timeStr) return 0;
+            const parts = timeStr.split(':');
+            if (parts.length !== 2) return 0;
+            
+            const minutes = parseInt(parts[0]) || 0;
+            const secondsParts = parts[1].split('.');
+            const seconds = parseInt(secondsParts[0]) || 0;
+            const milliseconds = secondsParts[1] ? parseInt(secondsParts[1]) * 10 : 0;
+            
+            return minutes * 60 + seconds + milliseconds / 1000;
+        }
+
+        function secondsToMMSS(seconds) {
+            // Returns "mm:ss" format
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        function parseMMSSToSeconds(timeStr) {
+            // Accepts "mm:ss" format only
+            if (!timeStr) return 0;
+            const parts = timeStr.split(':');
+            if (parts.length !== 2) return 0;
+            
+            const minutes = parseInt(parts[0]) || 0;
+            const seconds = parseInt(parts[1]) || 0;
+            
+            return minutes * 60 + seconds;
+        }
+
+        function parseHHMMSSToMinutes(timeStr) {
+            // Accepts "hh:mm:ss" format
+            if (!timeStr) return 0;
+            const parts = timeStr.split(':');
+            if (parts.length !== 3) return 0;
+            
+            const hours = parseInt(parts[0]) || 0;
+            const minutes = parseInt(parts[1]) || 0;
+            const seconds = parseInt(parts[2]) || 0;
+            
+            return hours * 60 + minutes + seconds / 60;
+        }
+
+        function minutesToHHMMSS(minutes) {
+            // Converts decimal minutes to hh:mm:ss format
+            const totalSeconds = Math.round(minutes * 60);
+            const hours = Math.floor(totalSeconds / 3600);
+            const mins = Math.floor((totalSeconds % 3600) / 60);
+            const secs = totalSeconds % 60;
+            return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        function secondsToTimeString(seconds) {
+            // Returns "mm:ss.ms" format
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            const ms = Math.floor((seconds % 1) * 100);
+            return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}.${String(ms).padStart(2, '0')}`;
+        }
+
+        function formatTimeHHMMSS(minutes) {
+            // Converts minutes to hh:mm:ss format
+            const totalSeconds = Math.round(minutes * 60);
+            const hours = Math.floor(totalSeconds / 3600);
+            const mins = Math.floor((totalSeconds % 3600) / 60);
+            const secs = totalSeconds % 60;
+            return `${String(hours).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        function formatRaceClock(elapsedMinutes) {
+            // Converts elapsed minutes to countdown clock (7:00:00 counting down)
+            const totalRaceMinutes = 7 * 60; // 7 hours = 420 minutes
+            const remainingMinutes = Math.max(0, totalRaceMinutes - elapsedMinutes);
+            return formatTimeHHMMSS(remainingMinutes);
+        }
+
+        // Initialize stints
+        function initializeStints() {
+            stints = [];
+            for (let i = 1; i <= 14; i++) {
+                stints.push({
+                    number: i,
+                    driverId: ((i - 1) % 3) + 1,
+                    timeMinutes: 30, // Default 30 minutes per stint
+                    pitTimeMinutes: i < 14 ? raceSettings.pitTime / 60 : 0, // Convert seconds to minutes
+                    completed: false,
+                    startTime: 0
+                });
+            }
+            calculateStartTimes();
+            render();
+        }
+
+        // Calculate start times
+        function calculateStartTimes() {
+            let currentTime = 0;
+            stints.forEach(stint => {
+                stint.startTime = currentTime;
+                currentTime += stint.timeMinutes + stint.pitTimeMinutes;
+            });
+        }
+
+        // Calculate laps for a stint
+        function calculateLaps(stintTimeMinutes) {
+            const stintTimeSeconds = stintTimeMinutes * 60;
+            // Subtract outlap and inlap times from total stint time
+            const racingTimeSeconds = stintTimeSeconds - raceSettings.outlapTime - raceSettings.inlapTime;
+            
+            if (racingTimeSeconds <= 0) return 0;
+            
+            // Calculate number of racing laps
+            const racingLaps = Math.floor(racingTimeSeconds / raceSettings.avgLapTime);
+            
+            // Total laps = 1 (outlap) + racing laps + 1 (inlap)
+            return racingLaps + 2;
+        }
+
+        // Update driver name
+        function updateDriverName(driverId, name) {
+            const driver = drivers.find(d => d.id === driverId);
+            if (driver) {
+                driver.name = name || `Driver ${driverId}`;
+                render();
+                saveToStorage();
+            }
+        }
+
+        // Update stint time
+        function updateStintTime(stintNumber, newTimeStr) {
+            const stint = stints.find(s => s.number === stintNumber);
+            if (stint && !stint.completed) {
+                stint.timeMinutes = parseHHMMSSToMinutes(newTimeStr) || 0;
+                calculateStartTimes();
+                render();
+                saveToStorage();
+            }
+        }
+
+        // Adjust stint time by seconds
+        function adjustStintTime(stintNumber, secondsDelta) {
+            const stint = stints.find(s => s.number === stintNumber);
+            if (stint && !stint.completed) {
+                const currentSeconds = stint.timeMinutes * 60;
+                const newSeconds = Math.max(0, currentSeconds + secondsDelta);
+                stint.timeMinutes = newSeconds / 60;
+                calculateStartTimes();
+                render();
+                saveToStorage();
+            }
+        }
+
+        // Update stint driver
+        function updateStintDriver(stintNumber, driverId) {
+            const stint = stints.find(s => s.number === stintNumber);
+            if (stint && !stint.completed) {
+                stint.driverId = parseInt(driverId);
+                render();
+                saveToStorage();
+            }
+        }
+
+        // Mark stint as completed
+        function markCompleted(stintNumber) {
+            const stint = stints.find(s => s.number === stintNumber);
+            if (stint) {
+                stint.completed = true;
+                render();
+                saveToStorage();
+            }
+        }
+
+        // Calculate driver totals (both completed and predicted)
+        function calculateDriverTotals() {
+            return drivers.map(driver => {
+                const completedTime = stints
+                    .filter(s => s.driverId === driver.id && s.completed)
+                    .reduce((sum, s) => sum + s.timeMinutes, 0);
+                
+                const predictedTime = stints
+                    .filter(s => s.driverId === driver.id)
+                    .reduce((sum, s) => sum + s.timeMinutes, 0);
+                    
+                return {
+                    ...driver,
+                    completedTime,
+                    predictedTime
+                };
+            });
+        }
+
+        // Render driver summary
+        function renderDriverSummary() {
+            const targetEl = document.getElementById('driverSummary');
+            if (!targetEl) {
+                throw new Error('driverSummary element not found');
+            }
+            
+            const driverTotals = calculateDriverTotals();
+            const minRequired = 100; // 100 minutes minimum per driver
+            
+            const html = driverTotals.map(driver => {
+                const statusClass = driver.predictedTime >= minRequired ? 'ok' : 'warning';
+                const statusText = driver.predictedTime >= minRequired ? '✓ OK' : 
+                                  `⚠ Need ${(minRequired - driver.predictedTime).toFixed(0)}min`;
+                
+                return `
+                    <div class="driver-card">
+                        <div class="driver-header">
+                            <div class="driver-dot ${driver.color}"></div>
+                            <span class="driver-name">${driver.name}</span>
+                        </div>
+                        <div class="driver-time">
+                            <span class="driver-time-label">Actual:</span>${formatTimeHHMMSS(driver.completedTime)}
+                        </div>
+                        <div class="driver-time-predicted">
+                            <span class="driver-time-label">Planned:</span>${formatTimeHHMMSS(driver.predictedTime)}
+                        </div>
+                        <div class="driver-status ${statusClass}">
+                            ${statusText}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            targetEl.innerHTML = html;
+        }
+
+        // Render stint list
+        function renderStintList() {
+            const targetEl = document.getElementById('stintList');
+            if (!targetEl) {
+                throw new Error('stintList element not found');
+            }
+            
+            const html = stints.map(stint => {
+                const driver = drivers.find(d => d.id === stint.driverId);
+                if (!driver) {
+                    throw new Error('Driver not found for stint ' + stint.number + ' with driverId ' + stint.driverId);
+                }
+                const predictedLaps = calculateLaps(stint.timeMinutes);
+                
+                const warnings = [];
+                if (stint.timeMinutes < raceSettings.minStint) {
+                    warnings.push('<span class="badge warning">Too Short</span>');
+                }
+                if (stint.timeMinutes > raceSettings.maxStint) {
+                    warnings.push('<span class="badge warning">Too Long</span>');
+                }
+                
+                const stintEndTime = stint.startTime + stint.timeMinutes;
+                const totalRaceMinutes = 420; // 7 hours
+                const remainingAtStart = totalRaceMinutes - stint.startTime;
+                const remainingAtEnd = totalRaceMinutes - stintEndTime;
+                
+                // Build driver options separately to avoid nested template literals
+                let driverOptions = '';
+                drivers.forEach(d => {
+                    const selected = d.id === stint.driverId ? 'selected' : '';
+                    driverOptions += '<option value="' + d.id + '" ' + selected + '>' + d.name + '</option>';
+                });
+                
+                return `
+                    <div class="stint-card ${stint.completed ? 'completed' : ''}">
+                        <div class="stint-header">
+                            <div class="stint-info">
+                                <span class="stint-number">#${stint.number}</span>
+                                <div class="driver-dot ${driver.color}"></div>
+                                <select class="driver-select" onchange="updateStintDriver(${stint.number}, this.value)" ${stint.completed ? 'disabled' : ''}>
+                                    ${driverOptions}
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <div class="stint-clock-times">
+                            <div class="clock-time">
+                                <span class="clock-label">Start Clock</span>
+                                <span class="clock-value">${formatRaceClock(stint.startTime)}</span>
+                            </div>
+                            <div class="clock-time">
+                                <span class="clock-label">Pit Clock</span>
+                                <span class="clock-value ${remainingAtEnd < 0 ? 'warning' : ''}">${formatRaceClock(stintEndTime)}</span>
+                            </div>
+                            <div class="clock-time">
+                                <span class="clock-label">Duration</span>
+                                <span class="clock-value">${minutesToHHMMSS(stint.timeMinutes)}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="stint-controls">
+                            <div class="stint-control">
+                                <label>Adjust Duration</label>
+                                <div class="time-input-group">
+                                    <button class="time-btn" onclick="adjustStintTime(${stint.number}, -1)" ${stint.completed ? 'disabled' : ''}>-</button>
+                                    <input type="text" 
+                                        class="time-input"
+                                        value="${minutesToHHMMSS(stint.timeMinutes)}"
+                                        onchange="updateStintTime(${stint.number}, this.value)"
+                                        placeholder="00:30:00"
+                                        ${stint.completed ? 'disabled' : ''}>
+                                    <button class="time-btn" onclick="adjustStintTime(${stint.number}, 1)" ${stint.completed ? 'disabled' : ''}>+</button>
+                                </div>
+                            </div>
+                            <div class="stint-control">
+                                <label>Pit Time</label>
+                                <span>${stint.pitTimeMinutes > 0 ? secondsToMMSS(stint.pitTimeMinutes * 60) : '--:--'}</span>
+                            </div>
+                            <div class="stint-control">
+                                <label>Est. Laps</label>
+                                <span>${predictedLaps}</span>
+                            </div>
+                        </div>
+                        
+                        <div class="stint-footer">
+                            <div class="warning-badges">
+                                ${warnings.join('')}
+                            </div>
+                            ${!stint.completed ? `
+                                <button class="btn btn-green" onclick="markCompleted(${stint.number})">
+                                    Mark Complete
+                                </button>
+                            ` : `
+                                <span class="completed-text">✓ Completed</span>
+                            `}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            targetEl.innerHTML = html;
+        }
+
+        // Render race summary
+        function renderRaceSummary() {
+            const completedCount = stints.filter(s => s.completed).length;
+            const completedDriveTime = stints.filter(s => s.completed).reduce((sum, s) => sum + s.timeMinutes, 0);
+            const totalPlannedDriveTime = stints.reduce((sum, s) => sum + s.timeMinutes, 0);
+            const totalPitTime = stints.reduce((sum, s) => sum + s.pitTimeMinutes, 0);
+            const lastStint = stints[13];
+            const finishTime = lastStint ? lastStint.startTime + lastStint.timeMinutes : 0;
+            
+            const html = `
+                <div class="summary-card blue">
+                    <div class="summary-value blue">${completedCount}/14</div>
+                    <div class="summary-label">Completed</div>
+                </div>
+                <div class="summary-card green">
+                    <div class="summary-value green">${formatTimeHHMMSS(completedDriveTime)}</div>
+                    <div class="summary-label">Completed Drive</div>
+                </div>
+                <div class="summary-card orange">
+                    <div class="summary-value orange">${formatTimeHHMMSS(totalPitTime)}</div>
+                    <div class="summary-label">Total Pit</div>
+                </div>
+                <div class="summary-card red">
+                    <div class="summary-value red">${formatTimeHHMMSS(finishTime)}</div>
+                    <div class="summary-label">Est. Finish</div>
+                </div>
+            `;
+            const targetEl = document.getElementById('raceSummary');
+            if (targetEl) {
+                targetEl.innerHTML = html;
+            } else {
+                throw new Error('raceSummary element not found');
+            }
+        }
+
+        // Main render function
+        function render() {
+            // Add visible debug info for mobile
+            const debugDiv = document.getElementById('errorBannerText');
+            if (debugDiv) {
+                debugDiv.textContent = 'Rendering: drivers=' + drivers.length + ', stints=' + stints.length;
+            }
+            
+            try {
+                renderDriverSummary();
+            } catch(e) {
+                console.error('renderDriverSummary failed:', e);
+                const el = document.getElementById('driverSummary');
+                if (el) el.innerHTML = '<div style="color:red">Error loading drivers: ' + e.message + '</div>';
+                if (debugDiv) {
+                    debugDiv.textContent = 'Driver render error: ' + e.message;
+                    document.getElementById('errorBanner').style.display = 'block';
+                }
+            }
+            
+            try {
+                renderStintList();
+            } catch(e) {
+                console.error('renderStintList failed:', e);
+                const el = document.getElementById('stintList');
+                if (el) el.innerHTML = '<div style="color:red">Error loading stints: ' + e.message + '</div>';
+                if (debugDiv) {
+                    debugDiv.textContent = 'Stint render error: ' + e.message;
+                    document.getElementById('errorBanner').style.display = 'block';
+                }
+            }
+            
+            try {
+                renderRaceSummary();
+            } catch(e) {
+                console.error('renderRaceSummary failed:', e);
+                const el = document.getElementById('raceSummary');
+                if (el) el.innerHTML = '<div style="color:red">Error loading summary: ' + e.message + '</div>';
+                if (debugDiv) {
+                    debugDiv.textContent = 'Summary render error: ' + e.message;
+                    document.getElementById('errorBanner').style.display = 'block';
+                }
+            }
+        }
+
+        // Update settings
+        function updateSettings() {
+            const avgLapInput = document.getElementById('avgLapTime').value;
+            const outlapInput = document.getElementById('outlapTime').value;
+            const inlapInput = document.getElementById('inlapTime').value;
+            const pitTimeInput = document.getElementById('pitTime').value;
+            
+            raceSettings.avgLapTime = parseTimeToSeconds(avgLapInput) || 84;
+            raceSettings.outlapTime = parseTimeToSeconds(outlapInput) || 100;
+            raceSettings.inlapTime = parseTimeToSeconds(inlapInput) || 95;
+            raceSettings.pitTime = parseMMSSToSeconds(pitTimeInput) || 120; // Default 2:00 = 120 seconds
+            raceSettings.minStint = parseInt(document.getElementById('minStint').value) || 10;
+            raceSettings.maxStint = parseInt(document.getElementById('maxStint').value) || 38;
+            
+            // Update pit times for all non-final stints (convert seconds to minutes)
+            stints.forEach((stint, index) => {
+                if (index < 13) {
+                    stint.pitTimeMinutes = raceSettings.pitTime / 60;
+                }
+            });
+            
+            calculateStartTimes();
+            render();
+            saveToStorage();
+        }
+
+        // Reset race
+        function resetRace() {
+            if (confirm('Are you sure you want to reset the race? This will clear all data for this team/tab.')) {
+                const storageKey = getStorageKey();
+                safeRemoveItem(storageKey);
+                drivers = [
+                    { id: 1, name: 'Driver 1', color: 'blue' },
+                    { id: 2, name: 'Driver 2', color: 'green' },
+                    { id: 3, name: 'Driver 3', color: 'red' }
+                ];
+                document.getElementById('driver1Name').value = 'Driver 1';
+                document.getElementById('driver2Name').value = 'Driver 2';
+                document.getElementById('driver3Name').value = 'Driver 3';
+                document.getElementById('teamName').value = '';
+                teamIdentifier = '';
+                initializeStints();
+            }
+        }
+
+        // Save to storage
+        function saveToStorage() {
+            const data = {
+                raceSettings,
+                stints,
+                drivers,
+                teamIdentifier,
+                savedAt: new Date().toISOString()
+            };
+            const storageKey = getStorageKey();
+            // Prefer localStorage when a team name is set; otherwise sessionStorage.
+            safeSetItem(storageKey, JSON.stringify(data), !!teamIdentifier);
+        }
+
+        // Load from storage
+        function loadFromStorage() {
+            // First check if there's a team identifier in the URL params
+            const urlParams = new URLSearchParams(window.location.search);
+            const urlTeam = urlParams.get('team');
+            if (urlTeam) {
+                document.getElementById('teamName').value = urlTeam;
+                updateTeamName();
+            }
+
+            const storageKey = getStorageKey();
+            // Try preferred store first; if empty, try the other; both are safe-wrapped
+            let data = safeGetItem(storageKey, !!teamIdentifier);
+            if (!data) {
+                data = safeGetItem(storageKey, !teamIdentifier);
+            }
+            // Migration: if no team and no data, look for legacy per-tab session keys
+            if (!data && !teamIdentifier) {
+                try {
+                    let best = null;
+                    let bestTime = 0;
+                    for (let i = 0; i < window.sessionStorage.length; i++) {
+                        const key = window.sessionStorage.key(i);
+                        if (key && key.indexOf('kartRaceData_tab_') === 0) {
+                            const val = safeGetItem(key, false);
+                            if (val) {
+                                try {
+                                    const parsed = JSON.parse(val);
+                                    const t = Date.parse(parsed.savedAt || parsed.exportedAt || 0) || 0;
+                                    if (t >= bestTime) {
+                                        bestTime = t;
+                                        best = val;
+                                    }
+                                } catch (_) { /* ignore corrupted */ }
+                            }
+                        }
+                    }
+                    if (best) {
+                        data = best;
+                        // Save under new stable key for future loads
+                        safeSetItem('kartRaceData_session', best, false);
+                    }
+                } catch (_) { /* iOS private mode may block iteration; ignore */ }
+            }
+            
+            if (data) {
+                try {
+                    const parsed = JSON.parse(data);
+                    raceSettings = parsed.raceSettings || raceSettings;
+                    // Fix legacy pitTime format (was stored as decimal minutes)
+                    if (raceSettings.pitTime < 10) {
+                        raceSettings.pitTime = raceSettings.pitTime * 60; // Convert old format (2.0 minutes) to seconds
+                    }
+                    // Ensure raceDuration is set
+                    if (!raceSettings.raceDuration) {
+                        raceSettings.raceDuration = 420; // 7 hours in minutes
+                    }
+                    
+                    // Validate and load stints - must have exactly 14
+                    if (parsed.stints && Array.isArray(parsed.stints) && parsed.stints.length === 14) {
+                        stints = parsed.stints;
+                    } else {
+                        // Initialize default stints if invalid
+                        initializeStints();
+                        return; // Exit early, initializeStints will call render()
+                    }
+                    
+                    // Validate and load drivers - must have exactly 3
+                    if (parsed.drivers && Array.isArray(parsed.drivers) && parsed.drivers.length === 3) {
+                        drivers = parsed.drivers;
+                    } else {
+                        // Keep default drivers if invalid
+                        drivers = [
+                            { id: 1, name: 'Driver 1', color: 'blue' },
+                            { id: 2, name: 'Driver 2', color: 'green' },
+                            { id: 3, name: 'Driver 3', color: 'red' }
+                        ];
+                    }
+                    
+                    // Update form inputs with null checks
+                    const avgLapEl = document.getElementById('avgLapTime');
+                    const outlapEl = document.getElementById('outlapTime');
+                    const inlapEl = document.getElementById('inlapTime');
+                    const minStintEl = document.getElementById('minStint');
+                    const maxStintEl = document.getElementById('maxStint');
+                    const pitTimeEl = document.getElementById('pitTime');
+                    
+                    if (avgLapEl) avgLapEl.value = secondsToTimeString(raceSettings.avgLapTime);
+                    if (outlapEl) outlapEl.value = secondsToTimeString(raceSettings.outlapTime);
+                    if (inlapEl) inlapEl.value = secondsToTimeString(raceSettings.inlapTime);
+                    if (minStintEl) minStintEl.value = raceSettings.minStint;
+                    if (maxStintEl) maxStintEl.value = raceSettings.maxStint;
+                    if (pitTimeEl) pitTimeEl.value = secondsToMMSS(raceSettings.pitTime);
+                    
+                    // Update driver names with null checks
+                    const driver1El = document.getElementById('driver1Name');
+                    const driver2El = document.getElementById('driver2Name');
+                    const driver3El = document.getElementById('driver3Name');
+                    
+                    if (driver1El && drivers[0]) driver1El.value = drivers[0].name;
+                    if (driver2El && drivers[1]) driver2El.value = drivers[1].name;
+                    if (driver3El && drivers[2]) driver3El.value = drivers[2].name;
+                    
+                    // Restore team identifier
+                    if (parsed.teamIdentifier) {
+                        teamIdentifier = parsed.teamIdentifier;
+                        const teamNameEl = document.getElementById('teamName');
+                        if (teamNameEl) teamNameEl.value = teamIdentifier.replace(/_/g, ' ');
+                        document.title = `Kart Calculator - ${teamIdentifier.replace(/_/g, ' ')}`;
+                    }
+                    
+                    calculateStartTimes();
+                    render();
+                } catch (e) {
+                    console.error('Failed to load saved data:', e);
+                    initializeStints();
+                }
+            } else {
+                initializeStints();
+            }
+        }
+
+        // Export data as JSON
+        function exportData() {
+            const data = {
+                raceSettings,
+                stints,
+                drivers,
+                teamIdentifier,
+                exportedAt: new Date().toISOString()
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `race_data_${new Date().toISOString().split('T')[0]}.json`;
+            // iOS Safari can require the link to be in the DOM
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => {
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+            }, 0);
+        }
+
+        // Auto-save every 30 seconds
+        setInterval(saveToStorage, 30000);
+
+        // Initialize on load
+        window.addEventListener('DOMContentLoaded', () => {
+            // Event listeners (must be inside DOMContentLoaded)
+            document.getElementById('minStint').addEventListener('change', updateSettings);
+            document.getElementById('maxStint').addEventListener('change', updateSettings);
+            
+            // Basic runtime error reporter (visible in UI for quick debugging on mobile)
+            function showError(msg) {
+                const banner = document.getElementById('errorBanner');
+                const text = document.getElementById('errorBannerText');
+                if (banner && text) {
+                    text.textContent = String(msg);
+                    banner.style.display = 'block';
+                }
+            }
+            window.addEventListener('error', function(e) {
+                var msg = (e && e.message) ? e.message : 'Unknown error';
+                showError(msg);
+            });
+            window.addEventListener('unhandledrejection', function(e) {
+                var reason = e && e.reason ? e.reason : 'Unhandled promise rejection';
+                var msg = (reason && reason.message) ? reason.message : String(reason);
+                showError(msg);
+            });
+
+            loadFromStorage();
+        });
+
+        // Save before unload
+        window.addEventListener('beforeunload', saveToStorage);
+    </script>
+</body>
+</html>
